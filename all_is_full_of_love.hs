@@ -15,6 +15,7 @@ t = 80 / 120
 pads = [AcousticGrandPiano, BrightAcousticPiano, ElectricGrandPiano, 
         HonkyTonkPiano, RhodesPiano, ChorusedPiano]
 
+bass = pads !! 0
 top_rhythm = pads !! 1
 bottom_rhythm = pads !! 2
 
@@ -65,14 +66,15 @@ motif_b = [[(F, 4), (F, 4), (C, 5), (D, 5)],
 intro_measures = mergeRhythmChords motif_a :+: mergeRhythmChrods motif_b
 
 -- singleton measures
-measure_5b_top = init (head motif_b)
-measure_5b_bottom = init motif_b_top ++ [(C, 4)]
-line_5b_bottom = motif2eline (pads !! 0) motif_a_bottom
+measure_5b_top = init (head motif_b) -- drop the last note of the top line
+measure_5b_bottom = init (last motif_b) ++ [(C, 4)]
+
 line_5_bass = instrument (pads !! 2) (note wn (F, 2))
 
 measure_5b = line_5b_top :=: line_5b_bottom :=: line_5_bass
 
-song = times 4 intro_motif :+: enr :+: measure_5b
+song = times 4 intro_motif :+: enr :+: 
+         measure_5b
 
 main :: IO ()
 main = 
