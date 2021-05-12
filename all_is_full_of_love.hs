@@ -15,6 +15,8 @@ t = 80 / 120
 pads = [AcousticGrandPiano, BrightAcousticPiano, ElectricGrandPiano, 
         HonkyTonkPiano, RhodesPiano, ChorusedPiano]
 
+top_rhythm = pads !! 1
+bottom_rhythm = pads !! 2
 
 nd3pMap :: ChannelMap
 nd3pMap = zip pads [0 .. 5]
@@ -39,24 +41,29 @@ p2eighth :: Pitch -> Music Pitch
 -- Sets a pitch to an eighth note.
 p2eighth (p, o) = note en (p, o)
 
-motif2eline :: InstrumentName -> [Pitch] -> Music Pitch
--- Takes an instrument and a list of pitches and
--- outputs music made up of eighth notes played on the given instrument.
-motif2eline i m = instrument i (line (map p2eighth m))
+make8thNotes :: [Pitch] -> Music Pitch
+make8thNotes l = line (map p2eighth (map c2df l))
+
+makeRhythmChords :: Music Pitch -> Music Pitch -> Music Pitch
+-- Assign to first two pads and merge.
+makeRhythmChords t b = instrument top_rhythm t :=: instrument bottom_rhythm b
+
 
 -- Building music
 
--- add the note values at this point.
-motif_a_top = map c2df [(C, 5), (F, 4), (F, 4), (C, 5)]
-motif_b_top = map c2df [(F, 4), (F, 4), (C, 5), (D, 5)]
+-- repeating motifs
+-- rhythm motifs have top and bottom lines forming chords.
+motif_a = [[(C, 5), (F, 4), (F, 4), (C, 5)],  
+           [(F, 4), (D, 4), (D, 4), (F, 4)]]
 
-motif_a_bottom = map c2df [(F, 4), (D, 4), (D, 4), (F, 4)]
-motif_b_bottom = map c2df [(D, 4), (D, 4), (F, 4), (E, 4)]
+motif_b = [[(F, 4), (F, 4), (C, 5), (D, 5)],
+           [(D, 4), (D, 4), (F, 4), (E, 4)]]
 
-line_a_top = motif2eline (pads !! 0) motif_a_top
-line_a_bottom = motif2eline (pads !! 1) motif_a_bottom
-line_b_top = motif2eline (pads !! 0) motif_b_top
-line_b_bottom = motif2eline (pads !! 1) motif_b_bottom
+-- repeating measures
+
+intro_measure = makeRhythmChords motif_a_top motif_a_bottom :+:
+                  makeRhythmChrods motif_b_top motif_b_bottom
+
 
 measure_5b_top = init motif_b_top
 line_5b_top = motif2eline (pads !! 0) motif_a_top
