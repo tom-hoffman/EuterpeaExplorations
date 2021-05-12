@@ -44,9 +44,10 @@ p2eighth (p, o) = note en (p, o)
 make8thNotes :: [Pitch] -> Music Pitch
 make8thNotes l = line (map p2eighth (map c2df l))
 
-makeRhythmChords :: Music Pitch -> Music Pitch -> Music Pitch
+mergeRhythmChords :: [Music Pitch] -> Music Pitch
 -- Assign to first two pads and merge.
-makeRhythmChords t b = instrument top_rhythm t :=: instrument bottom_rhythm b
+mergeRhythmChords l = instrument top_rhythm (head l) :=: 
+                        instrument bottom_rhythm (last b)
 
 
 -- Building music
@@ -61,19 +62,14 @@ motif_b = [[(F, 4), (F, 4), (C, 5), (D, 5)],
 
 -- repeating measures
 
-intro_measure = makeRhythmChords motif_a_top motif_a_bottom :+:
-                  makeRhythmChrods motif_b_top motif_b_bottom
+intro_measures = mergeRhythmChords motif_a :+: mergeRhythmChrods motif_b
 
-
-measure_5b_top = init motif_b_top
-line_5b_top = motif2eline (pads !! 0) motif_a_top
+-- singleton measures
+measure_5b_top = init (head motif_b)
 measure_5b_bottom = init motif_b_top ++ [(C, 4)]
 line_5b_bottom = motif2eline (pads !! 0) motif_a_bottom
 line_5_bass = instrument (pads !! 2) (note wn (F, 2))
 
-motif_a = line_a_top :=: line_a_bottom
-motif_b = line_b_top :=: line_b_bottom
-intro_motif = motif_a :+: motif_b 
 measure_5b = line_5b_top :=: line_5b_bottom :=: line_5_bass
 
 song = times 4 intro_motif :+: enr :+: measure_5b
