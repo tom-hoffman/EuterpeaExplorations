@@ -5,19 +5,18 @@ import Euterpea.IO.MIDI.MidiIO (unsafeOutputID)
 -- from 34 Scores for Piano, Organ, Harpsichord and Celeste.
 -- MIDI setup for Nord Drum 3p & Roland UM-ONE USB adapter.
 
--- This changes periodically.
+-- The ID of the MIDI adapter changes when restarting, etc.
 umOneID = Just (unsafeOutputID 2)
-
-t = 80 / 120
 
 -- Nord Drum 3p setup code
 
 pads = [AcousticGrandPiano, BrightAcousticPiano, ElectricGrandPiano, 
         HonkyTonkPiano, RhodesPiano, ChorusedPiano]
 
-bass = pads !! 0
-top_rhythm = pads !! 1
-bottom_rhythm = pads !! 2
+top_bass = pads !! 0
+bottom_bass = pads !! 1
+top_rhythm = pads !! 2
+bottom_rhythm = pads !! 3
 
 nd3pMap :: ChannelMap
 nd3pMap = zip pads [0 .. 5]
@@ -47,9 +46,13 @@ make8thNotes l = line (map p2eighth (map c2df l))
 
 mergeRhythmChords :: [Music Pitch] -> Music Pitch
 -- Assign to first two pads and merge.
-mergeRhythmChords l = instrument top_rhythm (head l) :=: 
-                        instrument bottom_rhythm (last b)
+mergeRhythmChords l = instrument top_rhythm (l !! 0) :=: 
+                      instrument bottom_rhythm (l !! 1)
 
+-- Song constants
+
+song_tempo = 80
+t = song_tempo / 120
 
 -- Building music
 
@@ -61,20 +64,27 @@ motif_a = [[(C, 5), (F, 4), (F, 4), (C, 5)],
 motif_b = [[(F, 4), (F, 4), (C, 5), (D, 5)],
            [(D, 4), (D, 4), (F, 4), (E, 4)]]
 
+motif_a_line = map make8thNotes motif_a
+motif_b_line = map make8thNotes motif_b
 -- repeating measures
 
-intro_measures = mergeRhythmChords motif_a :+: mergeRhythmChrods motif_b
+intro_measure = mergeRhythmChords motif_a_line :+: 
+                mergeRhythmChords motif_b_line
 
 -- singleton measures
-measure_5b_top = init (head motif_b) -- drop the last note of the top line
-measure_5b_bottom = init (last motif_b) ++ [(C, 4)]
+rhythm_5b = (cut (7 * en) intro_measure :+: 
+             instrument bottom_rhythm (note en (C, 4))) :=:
+             instrument top_bass (note wn (F, 2))
 
-line_5_bass = instrument (pads !! 2) (note wn (F, 2))
+--rhythm_6 = make8thNotes 
+-- use zipWith to merge a list of durs with a list of pitches.
 
-measure_5b = line_5b_top :=: line_5b_bottom :=: line_5_bass
+-- list of staffs
 
-song = times 4 intro_motif :+: enr :+: 
-         measure_5b
+staffs = [times 4 intro_measure :+: enr,                                     --1
+          rhythm_5b]
+
+song = line staffs
 
 main :: IO ()
 main = 
