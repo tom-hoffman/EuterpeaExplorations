@@ -66,6 +66,7 @@ motif_b = [[(F, 4), (F, 4), (C, 5), (D, 5)],
 
 motif_a_line = map make8thNotes motif_a
 motif_b_line = map make8thNotes motif_b
+
 -- repeating measures
 
 intro_measure = mergeRhythmChords motif_a_line :+: 
@@ -76,9 +77,9 @@ rhythm_5b = (cut (7 * en) intro_measure :+:
              instrument bottom_rhythm (note en (C, 4))) :=:
              instrument top_bass (note wn (F, 2))
 
---rhythm_6 = make8thNotes 
--- use zipWith to merge a list of durs with a list of pitches.
-
+-- adjust motif_a
+dur_6 = [qn, qn, en, dhn]
+rhythm_6 = line (zipWith note dur_6 (motif_a !! 0))
 -- list of staffs
 
 staffs = [times 4 intro_measure :+: enr,                                     --1
