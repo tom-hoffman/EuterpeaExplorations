@@ -14,8 +14,8 @@ pads = [AcousticGrandPiano, BrightAcousticPiano, ElectricGrandPiano,
         HonkyTonkPiano, RhodesPiano, ChorusedPiano]
 
 bass_pads = take 2 pads
-rhythm_pads = drop 2 (take 2 pads)
-lead_pads = drop 2 pads
+rhythm_pads = take 3 (drop 2 pads)
+lead_pad = drop 5 pads
 
 nd3pMap :: ChannelMap
 nd3pMap = zip pads [0 .. 5]
@@ -43,7 +43,10 @@ c2df (p, o) = (p, o)
 
 p2eighth :: Pitch -> Music Pitch
 -- Sets a pitch to an eighth note.
-p2eighth (p, o) = note en (p, o)
+p2eighth (p, o) = dfnote en (p, o)
+
+dfnote :: Dur -> Pitch -> Music Pitch
+dfnote d p = note d (c2df p)
 
 -- Song constants
 
@@ -69,29 +72,27 @@ staff_1 = times 4 (zipMeasure [wnr, wnr, motif_bottom_line,
                                motif_top_line, wnr, wnr]) :+: enr
 
 -- measure 5 ends the motif on a different note and the bass begins
-measure_5 = [note wn (c2df (F, 2)), wnr, 
-             cut (7 * en) motif_bottom_line :+: note en (c2df (C, 4)),
-             cut (7 * en) motif_top_line, wnr, wnr]
+measure_5 = [dfnote wn (F, 2), wnr, 
+             cut (7 * en) motif_bottom_line :+: dfnote en (C, 4),
+             cut (7 * en) motif_top_line, wnr,
+             line [dfnote qn (F, 3), dfnote qn (A, 4), 
+                   dfnote en (B, 3), dfnote qn (D, 3), dfnote en (F, 3)]]
 
 -- measure 6 has variation on motif a and different rhythm
 measure_6_rhythm :: [Pitch] -> Music Pitch
 measure_6_rhythm l =
   let dur_6 = [qn, qn, en, dhn]
-  in  line (zipWith note dur_6 l)
+  in  line (zipWith dfnote dur_6 l)
 
-measure_6 = [note wn (c2df (D, 2)), note wn (c2df (A, 3)), 
+measure_6 = [dfnote wn (D, 2), dfnote wn (A, 3), 
              measure_6_rhythm motif_a_bottom,
-             measure_6_rhythm (map c2df [(D, 5), (F, 4), (F, 4), (D, 5)]),
-             wnr, wnr]
-
-
-
+             measure_6_rhythm [(D, 5), (F, 4), (F, 4), (D, 5)], wnr,
+             dfnote qn (F, 3)]
 
 staff_2 = line (map zipMeasure [measure_5, measure_6])
 
 staffs = [staff_1,
-          staff_2
-         ]
+          staff_2]
 
 song = line staffs
 
