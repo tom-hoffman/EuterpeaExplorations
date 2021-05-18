@@ -63,31 +63,34 @@ motif_b_bottom = [(D, 4), (D, 4), (F, 4), (E, 4)]
 motif_top_line = line (map p2eighth (motif_a_top ++ motif_b_top))
 motif_bottom_line = line (map p2eighth (motif_a_bottom ++ motif_b_bottom))
 
---measures
+-- the song itself...
 
-intro_measure = zipMeasure [wnr, wnr, motif_top_line, 
-                            motif_bottom_line, wnr, wnr]
+staff_1 = times 4 (zipMeasure [wnr, wnr, motif_bottom_line, 
+                               motif_top_line, wnr, wnr]) :+: enr
 
 -- measure 5 ends the motif on a different note and the bass begins
-measure_5 = zipMeasure [note wn (F, 2), wnr, 
-                  cut (7 * en) motif_top_line,
-                  cut (7 * en) motif_bottom_line :+: note en(C, 4), wnr, wnr]
+measure_5 = [note wn (c2df (F, 2)), wnr, 
+             cut (7 * en) motif_bottom_line :+: note en (c2df (C, 4)),
+             cut (7 * en) motif_top_line, wnr, wnr]
+
+-- measure 6 has variation on motif a and different rhythm
+measure_6_rhythm :: [Pitch] -> Music Pitch
+measure_6_rhythm l =
+  let dur_6 = [qn, qn, en, dhn]
+  in  line (zipWith note dur_6 l)
+
+measure_6 = [note wn (c2df (D, 2)), note wn (c2df (A, 3)), 
+             measure_6_rhythm motif_a_bottom,
+             measure_6_rhythm (map c2df [(D, 5), (F, 4), (F, 4), (D, 5)]),
+             wnr, wnr]
 
 
 
----- measure 6 has variation on motif a and different rhythm
---measure_6_rhythm :: [Pitch] -> Music Pitch
---measure_6_rhythm l =
---  let dur_6 = [qn, qn, en, dhn]
---  in  line (zipWith note dur_6 l)
---top_6 = [(D, 5), (F, 4), (F, 4), (D, 5)]
---rhythm_6 = mergeChords rhythm_pads 
---             (map (measure_6_rhythm [top_6, (motif_a !! 1)]))
---measure_6 = rhythm_6
----- list of staffs
 
-staffs = [times 4 intro_measure :+: enr,
-          measure_5
+staff_2 = line (map zipMeasure [measure_5, measure_6])
+
+staffs = [staff_1,
+          staff_2
          ]
 
 song = line staffs
