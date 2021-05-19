@@ -10,13 +10,6 @@ umOneID = Just (unsafeOutputID 2)
 
 -- Nord Drum 3p setup code
 
-pads = [AcousticGrandPiano, BrightAcousticPiano, ElectricGrandPiano, 
-        HonkyTonkPiano, RhodesPiano, ChorusedPiano]
-
-bass_pads = take 2 pads
-rhythm_pads = take 3 (drop 2 pads)
-lead_pad = drop 5 pads
-
 nd3pMap :: ChannelMap
 nd3pMap = zip pads [0 .. 5]
 -- predefinedCP :: ChannelMap -> ChannelMapFun
@@ -24,12 +17,21 @@ nd3pParams = PlayParams False (predefinedCP nd3pMap) umOneID 1.0 perform1
 
 playND3p n = playC nd3pParams n
 
+pads = [AcousticGrandPiano, BrightAcousticPiano, ElectricGrandPiano, 
+        HonkyTonkPiano, RhodesPiano, ChorusedPiano]
+
+bass_pads = take 2 pads
+rhythm_pads = take 3 (drop 2 pads)
+lead_pad = drop 5 pads
+
+volumes = [127, 127, 96, 96, 96, 127, 127]
+
 -- Utility functions
 
-zipMeasure :: [Music Pitch] -> Music Pitch
+zipMeasure :: [Music Pitch] -> Music (Pitch, Volume)
 -- Inputs a list of six pitches, assigns each to an instrument 
 -- and combines them in parallel.
-zipMeasure m = chord (zipWith instrument pads m)
+zipMeasure m = chord (zipWith addVolume volumes (zipWith instrument pads m))
 
 c2df :: Pitch -> Pitch
 -- Fixes pitches entered from D flat sheet music without flats.
@@ -48,6 +50,9 @@ p2eighth (p, o) = dfnote en (p, o)
 dfnote :: Dur -> Pitch -> Music Pitch
 dfnote d p = note d (c2df p)
 
+motif_line :: [Pitch] -> [Pitch] -> Music Pitch
+motif_line a b = line (map p2eighth (a ++ b))
+
 -- Song constants
 
 song_tempo = 80
@@ -57,24 +62,35 @@ t = song_tempo / 120
 
 -- repeating motifs
 -- rhythm motifs have top and bottom lines forming chords.
-motif_a_top    = [(C, 5), (F, 4), (F, 4), (C, 5)]  
-motif_a_bottom = [(F, 4), (D, 4), (D, 4), (F, 4)]
+motif_a_top     = [(C, 5), (F, 4), (F, 4), (C, 5)]  
+motif_a_bottom  = [(F, 4), (D, 4), (D, 4), (F, 4)]
 
-motif_b_top    = [(F, 4), (F, 4), (C, 5), (D, 5)]
-motif_b_bottom = [(D, 4), (D, 4), (F, 4), (E, 4)]
+motif_b_top     = [(F, 4), (F, 4), (C, 5), (D, 5)]
+motif_b_bottom  = [(D, 4), (D, 4), (F, 4), (E, 4)]
 
-motif_top_line = line (map p2eighth (motif_a_top ++ motif_b_top))
-motif_bottom_line = line (map p2eighth (motif_a_bottom ++ motif_b_bottom))
+motif_ab_top    = motif_line motif_a_top motif_b_top
+motif_ab_bottom = motif_line motif_a_bottom motif_b_bottom
+
+
+
+motif_c_top     = [(G, 5), (A, 5), (A, 5), (G, 5)]
+motif_c_bottom  = [(D, 5), (G, 4), (G, 4), (D, 5)]
+
+motif_d_top     = [(A, 5), (A, 5), (G, 5), (A, 5)]
+motif_d_bottom  = [(G, 4), (G, 4), (D, 5), (G, 4)]
+
+motif_cd_top    = motif_line motif_c_top motif_d_top
+motif_cd_bottom = motif_line motif_d_bottom motif_d_bottom
 
 -- the song itself...
 
-staff_1 = times 4 (zipMeasure [wnr, wnr, motif_bottom_line, 
-                               motif_top_line, wnr, wnr]) :+: enr
+staff_1 = times 4 (zipMeasure [wnr, wnr, motif_ab_bottom, 
+                               motif_ab_top, wnr, wnr]) :+: addVolume 0 enr
 
 -- measure 5 ends the motif on a different note and the bass begins
 measure_5 = [dfnote wn (F, 2), wnr, 
-             cut (7 * en) motif_bottom_line :+: dfnote en (C, 4),
-             cut (7 * en) motif_top_line, wnr,
+             cut (7 * en) motif_ab_bottom :+: dfnote en (C, 4),
+             cut (7 * en) motif_ab_top, wnr,
              line [dfnote qn (F, 3), dfnote qn (A, 4), 
                    dfnote en (B, 3), dfnote qn (D, 3), dfnote en (F, 3)]]
 
@@ -88,6 +104,11 @@ measure_6 = [dfnote wn (D, 2), dfnote wn (A, 3),
              measure_6_rhythm motif_a_bottom,
              measure_6_rhythm [(D, 5), (F, 4), (F, 4), (D, 5)], wnr,
              dfnote qn (F, 3)]
+
+-- measure 7 introduces new rhythm motif
+measure_7 = [dfnote wn (G, 2), dfnote wn (D, 3),
+             motif_cd_bottom, motif_cd_top, wnr,
+             line [qnr, times 2 (dfnote qn (D, 3)), dfnote qn (F, 3)]]
 
 staff_2 = line (map zipMeasure [measure_5, measure_6])
 
