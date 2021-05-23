@@ -24,7 +24,7 @@ bass_pads = take 2 pads
 rhythm_pads = take 3 $ drop 2 pads
 lead_pad = drop 5 pads
 
-volumes = [127, 127, 8, 8, 8, 127]
+volumes = [127, 127, 64, 64, 64, 127]
 
 -- Utility functions
 
